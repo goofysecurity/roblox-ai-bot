@@ -7,9 +7,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// If Node doesn't support fetch, uncomment this:
-// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
+// Health check route
 app.get("/", (req, res) => {
   res.send("AI server is running");
 });
@@ -18,6 +16,10 @@ app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
+    if (!message) {
+      return res.status(400).json({ error: "No message provided" });
+    }
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -25,29 +27,41 @@ app.post("/chat", async (req, res) => {
         "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: "llama3-8b-8192",
+        model: "llama-3.1-8b-instant",
         messages: [
           { role: "system", content: "You are a Roblox NPC assistant." },
           { role: "user", content: message }
-        ]
+        ],
+        temperature: 0.7
       })
     });
 
     const data = await response.json();
 
-    if (!data.choices) {
+    // If Groq returns an error
+    if (!response.ok) {
+      console.error("Groq error:", data);
       return res.status(500).json({
         error: "Groq failed",
         raw: data
       });
     }
 
+    const reply = data?.choices?.[0]?.message?.content;
+
+    if (!reply) {
+      return res.status(500).json({
+        error: "No reply from model",
+        raw: data
+      });
+    }
+
     res.json({
-      reply: data.choices[0].message.content
+      reply: reply
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Server error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
