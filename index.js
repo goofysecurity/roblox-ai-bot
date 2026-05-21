@@ -1,14 +1,17 @@
-// index.js
-// Simple Node.js entrypoint example
+import express from "express";
+import bodyParser from "body-parser";
 
-const http = require('http');
-const port = process.env.PORT || 3000;
+const app = express();
+app.use(bodyParser.json());
 
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Hello from Node.js!');
+app.post("/chat", (req, res) => {
+    const message = req.body.message;
+
+    res.json({
+        reply: "AI says: " + message
+    });
 });
 
-server.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+app.listen(process.env.PORT || 3000, "0.0.0.0", () => {
+    console.log("Server running on port 3000");
 });
