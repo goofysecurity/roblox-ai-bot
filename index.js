@@ -2,22 +2,29 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
+// If you're NOT on Node 18+, uncomment this:
+// const fetch = require("node-fetch");
+
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Health check route
+// Health check
 app.get("/", (req, res) => {
   res.send("AI server is running");
 });
 
+// Chat endpoint
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
     if (!message) {
-      return res.status(400).json({ error: "No message provided" });
+      return res.status(400).json({
+        ok: false,
+        error: "No message provided"
+      });
     }
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -29,8 +36,14 @@ app.post("/chat", async (req, res) => {
       body: JSON.stringify({
         model: "llama-3.1-8b-instant",
         messages: [
-          { role: "system", content: "You are a Roblox NPC assistant." },
-          { role: "user", content: message }
+          {
+            role: "system",
+            content: "You are a short Roblox NPC. Keep replies under 120 characters."
+          },
+          {
+            role: "user",
+            content: message
+          }
         ],
         temperature: 0.7
       })
@@ -38,12 +51,11 @@ app.post("/chat", async (req, res) => {
 
     const data = await response.json();
 
-    // If Groq returns an error
     if (!response.ok) {
-      console.error("Groq error:", data);
       return res.status(500).json({
+        ok: false,
         error: "Groq failed",
-        raw: data
+        details: data
       });
     }
 
@@ -51,21 +63,27 @@ app.post("/chat", async (req, res) => {
 
     if (!reply) {
       return res.status(500).json({
+        ok: false,
         error: "No reply from model",
         raw: data
       });
     }
 
-    res.json({
-      reply: reply
+    return res.json({
+      ok: true,
+      reply: reply.trim()
     });
 
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({
+      ok: false,
+      error: "Server crash",
+      details: err.message
+    });
   }
 });
 
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
