@@ -48,7 +48,7 @@ Rules:
 - No anime or femboy personality
 - Speak clearly and naturally
 - Be short, helpful, and professional
-- Maximum 1-2 sentences
+- Maximum 1 to 2 sentences
             `
           },
           {
