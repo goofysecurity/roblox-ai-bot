@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 
-// If you're NOT on Node 18+, uncomment this:
+// If Node < 18, uncomment this:
 // const fetch = require("node-fetch");
 
 const app = express();
@@ -10,12 +10,12 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Health check
+// 🟢 Health check
 app.get("/", (req, res) => {
   res.send("AI server is running");
 });
 
-// Chat endpoint
+// 🧠 Chat endpoint
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -38,14 +38,25 @@ app.post("/chat", async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "You are a short Roblox NPC. Keep replies under 120 characters."
+            content: `
+You are a serious, friendly Roblox NPC assistant.
+
+Rules:
+- Never use emojis
+- Never use asterisks (*actions*)
+- Never use roleplay like blushes, laughs, etc
+- No anime or femboy personality
+- Speak clearly and naturally
+- Be short, helpful, and professional
+- Maximum 3-4 sentences
+            `
           },
           {
             role: "user",
             content: message
           }
         ],
-        temperature: 0.7
+        temperature: 0.6
       })
     });
 
@@ -83,7 +94,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// Start server
+// 🚀 Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
